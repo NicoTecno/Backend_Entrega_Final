@@ -148,7 +148,10 @@
             // Extrae el id del producto desde el id del elemento
             const productId = event.currentTarget.id.split('-')[1];
             var URLdomain = window.location.host;
-            window.location.href = `${URLdomain}/products/${productId}`;
+            console.log(URLdomain);
+            var pathname = window.location.pathname;
+            console.log(pathname);
+            window.location.href = `${pathname}/products/${productId}`;
         })
     })
 </script>
