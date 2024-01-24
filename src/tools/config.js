@@ -13,4 +13,6 @@ export default {
 
     adminUser: process.env.ADMIN_USER,
     adminPassword: process.env.ADMIN_PASSWORD,
+    //agregue el port
+    port: process.env.PORT,
 }

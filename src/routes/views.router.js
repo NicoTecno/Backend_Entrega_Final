@@ -25,12 +25,13 @@ viewsRouter.get('/', async (req, res) => {
 
         req.logger.info('Products fetched successfully.');
 
-
+        //AGREGO EL PORT
         res.status(200).render('products', {
             script: 'index',
             style: 'index',
             title: 'Productos',
-            products: products
+            products: products,
+            port: process.env.PORT,
         });
   
     } catch (error) {

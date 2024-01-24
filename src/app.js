@@ -53,7 +53,8 @@ import config from './tools/config.js';
 import mailingRoutes from './routes/mailing.js';
 
 const app = express();
-const port = process.env.PORT;
+
+const port =  typeof(config.port) === 'number' || 8080;
 
 const corsOptions = {
 	origin: 'http://localhost:8080',  // Reemplaza con la IP y puerto de tu servidor
