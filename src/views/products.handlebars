@@ -142,24 +142,13 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/js/products.js"></script>
 
-
 <script type="text/javascript">
     document.querySelectorAll('.card.mb-3').forEach(item => {
         item.addEventListener('click', event => {
             // Extrae el id del producto desde el id del elemento
             const productId = event.currentTarget.id.split('-')[1];
-            // Obtiene la URL actual
-            let currentUrl = window.location.href;
-            // Asegúrate de que la URL termine con una barra
-            if (!currentUrl.endsWith('/')) {
-                currentUrl += '/';
-            }
-            // Agrega 'products' al final de la URL
-            currentUrl += 'products';
-            // Agrega el id del producto al final de la URL
-            currentUrl += '/' + productId;
-            // Redirige al usuario a la página de productos
-            window.location.href = currentUrl;
+            var URLdomain = window.location.host;
+            window.location.href = `${URLdomain}/products/${productId}`;
         })
     })
 </script>
