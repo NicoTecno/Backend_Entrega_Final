@@ -31,7 +31,9 @@ viewsRouter.get('/', async (req, res) => {
             style: 'index',
             title: 'Productos',
             products: products,
-            port: process.env.PORT,
+            //port: process.env.PORT,
+            baseUrl: global.baseUrl,
+
         });
   
     } catch (error) {
