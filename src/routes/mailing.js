@@ -149,9 +149,21 @@ mailingRoutes.post("/mail", async (req, res) => {
     res.status(201).json(`The details of the purchase have been sent to:  ${userEmail}`);
 });
 
-
+//GMAIL
+/*
 const trasport = nodemailer.createTransport({
     service: 'gmail',
+    port: 587,
+    auth: {
+        user: `${email}`,
+        pass: `${email_pass}`
+    }
+});
+*/
+
+//Ethereal
+const trasport = nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
     port: 587,
     auth: {
         user: `${email}`,
