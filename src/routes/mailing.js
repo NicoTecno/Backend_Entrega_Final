@@ -150,7 +150,6 @@ mailingRoutes.post("/mail", async (req, res) => {
 });
 
 //GMAIL
-/*
 const trasport = nodemailer.createTransport({
     service: 'gmail',
     port: 587,
@@ -159,9 +158,10 @@ const trasport = nodemailer.createTransport({
         pass: `${email_pass}`
     }
 });
-*/
+
 
 //Ethereal
+/*
 const trasport = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
@@ -170,5 +170,6 @@ const trasport = nodemailer.createTransport({
         pass: `${email_pass}`
     }
 });
+*/
 
 export default mailingRoutes;
