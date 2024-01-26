@@ -57,11 +57,11 @@ const realTimeProductsRouter = (socketServer) => {
 
 
                 if (product.owner === email) {
-                    await productController.deleteProduct(id);
+                    await productController.deleteProductById(id);
                     socket.emit('deleteResult', { success: true, message: 'Product deleted' });
                     logger.info("Product deleted");
                 } else if (!email){
-                    await productController.deleteProduct(id);
+                    await productController.deleteProductById(id);
                     socket.emit('deleteResult', { success: true, message: 'Product deleted' });
                     logger.info("Product deleted");
                 }  else {

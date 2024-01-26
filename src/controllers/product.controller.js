@@ -138,24 +138,36 @@ class ProductController {
 
 
   // Delete
-  deleteProductById = async (req, res) => {
-    const pid = req.params.pid;
+//   deleteProductById = async (req, res) => {
+//     const pid = req.params.pid;
 
-    try {
-      const deletedProduct = await productModel.findByIdAndDelete(pid);
+//     try {
+//       const deletedProduct = await productModel.findByIdAndDelete(pid);
 
-      if (!deletedProduct) {
-        res.status(404).send({ message: 'Product to delete not found' });
-      }
+//       if (!deletedProduct) {
+//         res.status(404).send({ message: 'Product to delete not found' });
+//       }
 
-      req.logger.debug(`Product deleted successfully: ${deletedProduct}`);
-      res.status(200).send(`Product deleted successfully: ${deletedProduct}`);
+//       req.logger.debug(`Product deleted successfully: ${deletedProduct}`);
+//       res.status(200).send(`Product deleted successfully: ${deletedProduct}`);
 
-    } catch (error) {
-      req.logger.error(`Error trying to delete a product: ${error}`);
-      res.status(500).send(`Error trying to delete product: ${error}`);
-    };
+//     } catch (error) {
+//       req.logger.error(`Error trying to delete a product: ${error}`);
+//       res.status(500).send(`Error trying to delete product: ${error}`);
+//     };
+//   };
+// }
+
+deleteProductById = async (id) => {
+  try {
+    const deletedProduct = await productModel.findByIdAndDelete(id);
+    if (!deletedProduct) {
+      console.log("No se encontro el producto")
+    }
+  } catch (error) {
+    console.log("Erorr borrando ", error);
   };
+};
 }
 
 const productController = new ProductController();
