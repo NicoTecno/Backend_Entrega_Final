@@ -1,49 +1,60 @@
-import { Router } from 'express';
-import nodemailer from 'nodemailer';
-import twilio from 'twilio';
+import { Router } from "express";
+import nodemailer from "nodemailer";
+import twilio from "twilio";
 
-import { userService, ticketService, productService } from "../services/index.js";
-import TicketDTO from '../DTOs/TicketsDto.js'
 
-import 'dotenv/config'
-import productModel from '../DAOs/models/products.model.js';
-import mailingController from '../controllers/mailing.controller.js';
+import {
+  userService,
+  ticketService,
+  productService,
+} from "../services/index.js";
+import TicketDTO from "../DTOs/TicketsDto.js";
+
+import "dotenv/config";
+import productModel from "../DAOs/models/products.model.js";
+import mailingController from "../controllers/mailing.controller.js";
+
+import Swal from 'sweetalert2'
+
 
 //twilio info
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
-const TWILIO_NUM = process.env.TWILIO_NUM
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_NUM = process.env.TWILIO_NUM;
 
-const email = process.env.EMAIL
-const email_pass = process.env.EMAIL_PASS
+const email = process.env.EMAIL;
+const email_pass = process.env.EMAIL_PASS;
 
 const mailingRoutes = Router();
 
-mailingRoutes.post("/mail/delete-inactive-accounts", mailingController.deleteUserInactiveMail)
-mailingRoutes.post("/mail/delete-product", mailingController.deleteProductMail)
-
+mailingRoutes.post(
+  "/mail/delete-inactive-accounts",
+  mailingController.deleteUserInactiveMail
+);
+mailingRoutes.post("/mail/delete-product", mailingController.deleteProductMail);
 
 mailingRoutes.post("/mail", async (req, res) => {
+  const { userEmail, products, total } = req.body;
+  let productListHTML = "";
 
-    const { userEmail, products, total } = req.body;
-    let productListHTML = '';
+  const user = await userService.getByEmail(userEmail);
 
-    const user = await userService.getByEmail(userEmail);
+  req.logger.info("Getting user Email");
 
-    req.logger.info("Getting user Email")
+  if (!user) {
+    req.logger.error(`User ${userEmail} does not exist`);
+    return res.status(404).json({ error: "User not found" });
+  }
 
-    if (!user) {
-        req.logger.error(`User ${userEmail} does not exist`);
-        return res.status(404).json({ error: "User not found" });
-    }
+  let subtotalTotal = 0;
 
-    let subtotalTotal = 0;
-
-    for (const product of products) {
+  try {
+    if (products !== undefined) {
+      for (const product of products) {
         const id = product.productId.id;
         const title = product.productId.title;
         const quantity = product.quantity;
-        const description = product.productId.description
+        const description = product.productId.description;
         const price = product.productId.price;
         const subtotal = product.subtotal;
 
@@ -52,33 +63,33 @@ mailingRoutes.post("/mail", async (req, res) => {
         subtotalTotal += productSubtotal; // Suma al subtotal acumulado
 
         // encontrar producto en db
-        let dbproduct = await productModel.findById(id)
-
+        let dbproduct = await productModel.findById(id);
 
         if (!dbproduct) {
-            req.logger.error(`Product with ID ${id} not found)`);
-            return res.status(404).json({ error: `Product with ID ${id} not found.` });
+          req.logger.error(`Product with ID ${id} not found)`);
+          return res
+            .status(404)
+            .json({ error: `Product with ID ${id} not found.` });
         } else {
-            req.logger.debug(`Product with ID ${id} is found`);
+          req.logger.debug(`Product with ID ${id} is found`);
         }
 
         //restamos el stock que se comptro
         if (dbproduct.stock == 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Not Enough Stock',
-                showConfirmButton: false,
-                timer: 1000
-            })
-
+          Swal.fire({
+            icon: "error",
+            title: "Not Enough Stock",
+            showConfirmButton: false,
+            timer: 1000,
+          });
         } else {
-            req.logger.debug("Restamos el stock")
-            dbproduct.stock -= quantity;
+          req.logger.debug("Restamos el stock");
+          dbproduct.stock -= quantity;
         }
 
         //si el stock es 0, false
         if (dbproduct.stock === 0) {
-            dbproduct.status = false;
+          dbproduct.status = false;
         }
 
         // Guarda el producto
@@ -87,35 +98,45 @@ mailingRoutes.post("/mail", async (req, res) => {
         //dbproduct.markModified('status');
         await dbproduct.save();
 
-
         productListHTML += `
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <h5>${title}</h5>
-                    <p>${description}</p>
-                </div>
-                <div class="col-md-2 text-end">
-                    <p>Cantidad: ${quantity}</p>
-                </div>
-                <div class="col-md-2 text-end">
-                    <p>Precio: $${price}</p>
-                </div>
-                <div class="col-md-2 text-end">
-                    <p>Subtotal: $${subtotal}</p>
-                </div>
-            </div>
-        `;
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>${title}</h5>
+                            <p>${description}</p>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <p>Cantidad: ${quantity}</p>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <p>Precio: $${price}</p>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <p>Subtotal: $${subtotal}</p>
+                        </div>
+                    </div>
+                `;
+      }
+    } else {
+      throw new Error("El carrito esta vacio");
     }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: error.message,
+      showConfirmButton: false,
+      timer: 1000,
+    });
+  }
 
-    //guardar ticket y limpia el carrito
-    const ticketDto = new TicketDTO(user.email, subtotalTotal, user.cart);
-    await ticketService.createTicket(ticketDto);
+  //guardar ticket y limpia el carrito
+  const ticketDto = new TicketDTO(user.email, subtotalTotal, user.cart);
+  await ticketService.createTicket(ticketDto);
 
-    user.cart = [];
-    await user.save();
+  user.cart = [];
+  await user.save();
 
-    // Generar el HTML completo del correo electrónico.
-    const emailHTML = `
+  // Generar el HTML completo del correo electrónico.
+  const emailHTML = `
         <h1>Thanks for your purchase!</h1>
         <hr>
         <section id="order-confirmation" class="container mt-5">
@@ -136,29 +157,28 @@ mailingRoutes.post("/mail", async (req, res) => {
         </section>
     `;
 
+  let mailOptions = await trasport.sendMail({
+    from: `Coder Test <${email}>`,
+    to: userEmail,
+    subject: "Shopping Coder",
+    html: emailHTML, // Aquí agregamos el HTML completo del correo electrónico.
+  });
 
-    let mailOptions = await trasport.sendMail({
-        from: `Coder Test <${email}>`,
-        to: userEmail,
-        subject: 'Shopping Coder',
-        html: emailHTML, // Aquí agregamos el HTML completo del correo electrónico.
-
-    });
-
-    req.logger.debug("Correo Enviado")
-    res.status(201).json(`The details of the purchase have been sent to:  ${userEmail}`);
+  req.logger.debug("Correo Enviado");
+  res
+    .status(201)
+    .json(`The details of the purchase have been sent to:  ${userEmail}`);
 });
 
 //GMAIL
 const trasport = nodemailer.createTransport({
-    service: 'gmail',
-    port: 587,
-    auth: {
-        user: `${email}`,
-        pass: `${email_pass}`
-    }
+  service: "gmail",
+  port: 587,
+  auth: {
+    user: `${email}`,
+    pass: `${email_pass}`,
+  },
 });
-
 
 //Ethereal
 /*
